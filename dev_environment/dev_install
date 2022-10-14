@@ -1,0 +1,27 @@
+#!/bin/bash
+# Script to install the development environment for various Zephyr-based repositories.
+
+# Abort on error
+set -e
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+SCRIPT_DIR=$(dirname $0)
+
+if ! command -v docker >/dev/null; then
+    echo "Installing docker..."
+    sudo apt install -y docker
+fi
+docker build -t zephyr-nrf-renode $SCRIPT_DIR
+
+# Recommended by https://docs.zephyrproject.org/latest/develop/getting_started/ to
+# locally download the repository instead of making it part of the docker image.
+# Although it could be seen as a library with a fixed version (analog to e.g. Python
+# dependencies), it would bloat the docker image with additional ~10GB.
+ZEPHYR_SRC_VER=v3.2.0
+cd $ROOT_DIR
+./run west init .. --mr $ZEPHYR_SRC_VER
+./run west update --narrow -o=--depth=1
+
+echo "==> ✓ Ready to run example projects"
+
+./run ./_compile_run_ble

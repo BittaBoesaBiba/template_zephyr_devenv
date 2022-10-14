@@ -1,0 +1,32 @@
+#!/bin/bash
+# Script to open Docker container prepared for build and test runs in this repository.
+
+# Run this script from anywhere inside a repository.
+# The entire path below the repo root will be accessible within the docker container.
+REPO_PATH=$(git rev-parse --show-toplevel)
+REPO_NAME=$(basename "$REPO_PATH")
+REPO_CUR_DIR=$(git rev-parse --show-prefix)
+
+if [[ $# = 0 ]]; then
+    # Simply calling this script without parameters opens the terminal.
+    COMMAND=bash
+else
+    # Otherwise execute the specified command within the image.
+    COMMAND=$1
+fi
+
+# Open ...
+#   interactive container, which cleans up itself after closing, ...
+#   with full terminal, full GUI (via X server), and other interface (USB) support ...
+#   with reference to this repository and Zephyr's (downloaded via dev_install), ...
+#   using current dir as entry point, for potentially non-default entry command
+
+# Working directory name is defined in the Dockerfile
+IMAGE_WORKDIR="/workdir"
+LOCAL_WORKDIR=$REPO_PATH/..
+docker run \
+    --interactive --rm \
+    --tty --network=host --env DISPLAY=$DISPLAY --privileged \
+    --volume="$LOCAL_WORKDIR:$IMAGE_WORKDIR" \
+    --workdir="$IMAGE_WORKDIR/$REPO_NAME/$REPO_CUR_DIR" --entrypoint="$COMMAND" \
+    zephyr-nrf-renode "${@:2}"

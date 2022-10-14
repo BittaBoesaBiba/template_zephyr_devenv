@@ -1,0 +1,24 @@
+#!/bin/bash
+# from https://renode.readthedocs.io/en/latest/tutorials/ble-simulation.html
+
+# Abort on error
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORK_DIR=/workdir
+RUN_DIR=$REPO_ROOT/tests
+BUILD_DIR=$WORK_DIR/_tmp_build
+BOARD=nrf52840dk_nrf52840  # ubx_evkninab3_nrf52840, nrf52840dk_nrf52840
+
+BT_SAMPLE_DIR=$WORK_DIR/zephyr/samples/bluetooth
+NAME=central_hr
+west build --build-dir $BUILD_DIR/$NAME $BT_SAMPLE_DIR/$NAME --board $BOARD
+mv $BUILD_DIR/$NAME/zephyr/zephyr.elf $RUN_DIR/$NAME.elf
+
+NAME=peripheral_hr
+west build --build-dir $BUILD_DIR/$NAME $BT_SAMPLE_DIR/$NAME --board $BOARD
+mv $BUILD_DIR/$NAME/zephyr/zephyr.elf $RUN_DIR/$NAME.elf
+
+cd $RUN_DIR
+renode-test demo_automatic.robot
+renode demo_manual.resc

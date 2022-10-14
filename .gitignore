@@ -1,0 +1,10 @@
+# Test images
+*.elf
+
+# Robot framework output
+logs/*
+snapshot/*
+*.html
+*.xml
+*.log
+*.save
